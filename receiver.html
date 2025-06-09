@@ -3,38 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <title>My Cast Receiver</title>
+  <!-- CAF Receiver Framework -->
   <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <style>
+    body { background: #111; color: #fff; font-family: Arial, sans-serif; text-align: center; }
+    h1 { color: #2d8cf0; margin-top: 40px; }
+    #log { margin: 30px auto; width: 80%; background: #222; border-radius: 8px; padding: 16px; min-height: 60px; text-align: left; font-size: 16px; }
+    #media { margin-top: 30px; }
+    video { width: 80vw; max-width: 900px; border-radius: 8px; background: #000; }
+  </style>
 </head>
-<body style="background-color: black; color: white;">
-  <h1>Custom Receiver Loaded</h1>
+<body>
+  <h1>Custom Cast Receiver</h1>
+  <div id="log">Receiver started...</div>
+  <div id="media"></div>
   <script>
-    // 初始化超时处理
+    function log(msg) {
+      const logDiv = document.getElementById('log');
+      logDiv.innerHTML += `<div>${new Date().toLocaleTimeString()} - ${msg}</div>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(msg);
+    }
+
     setTimeout(() => {
       const context = cast.framework.CastReceiverContext.getInstance();
       const playerManager = context.getPlayerManager();
-      
+
+      // 监听 LOAD 事件
       playerManager.setMessageInterceptor(
         cast.framework.messages.MessageType.LOAD,
         request => {
+          log('LOAD: ' + JSON.stringify(request.media));
+          // 你可以在这里自定义媒体加载逻辑
           return request;
         }
       );
 
-      // 监听更多事件
+      // 监听播放
       playerManager.addEventListener(
         cast.framework.events.EventType.PLAY,
         event => {
-          // 处理播放
+          log('PLAY');
         }
       );
+      // 监听暂停
       playerManager.addEventListener(
         cast.framework.events.EventType.PAUSE,
         event => {
-          // 处理暂停
+          log('PAUSE');
         }
       );
+      // 监听停止
+      playerManager.addEventListener(
+        cast.framework.events.EventType.STOP,
+        event => {
+          log('STOP');
+        }
+      );
+      // 监听快进/seek
+      playerManager.addEventListener(
+        cast.framework.events.EventType.SEEK,
+        event => {
+          log('SEEK to ' + event.currentTime);
+        }
+      );
+      // 监听音量
+      playerManager.addEventListener(
+        cast.framework.events.EventType.VOLUME_CHANGED,
+        event => {
+          log('VOLUME: ' + event.volumeLevel);
+        }
+      );
+
+      // 监听媒体状态变化
+      playerManager.addEventListener(
+        cast.framework.events.EventType.MEDIA_STATUS,
+        event => {
+          log('MEDIA_STATUS: ' + JSON.stringify(event));
+        }
+      );
+
+      // 启动 receiver
       context.start();
-      console.log("Cast Receiver Context started");
+      log("Cast Receiver Context started");
     }, 1000);
   </script>
 </body>
